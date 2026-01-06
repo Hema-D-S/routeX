@@ -1,68 +1,6 @@
 version: '3.8'
 
 services:
-  mongodb-users:
-    image: mongo:5.0
-    container_name: mongodb-users
-    environment:
-      MONGO_INITDB_DATABASE: users_db
-    volumes:
-      - mongodb-users-data:/data/db
-    networks:
-      - uber-network
-    restart: always
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  mongodb-rides:
-    image: mongo:5.0
-    container_name: mongodb-rides
-    environment:
-      MONGO_INITDB_DATABASE: rides_db
-    volumes:
-      - mongodb-rides-data:/data/db
-    networks:
-      - uber-network
-    restart: always
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  redis:
-    image: redis:7
-    container_name: redis-cache
-    command: redis-server --requirepass ${REDIS_PASSWORD:-defaultpassword}
-    volumes:
-      - redis-data:/data
-    networks:
-      - uber-network
-    restart: always
-    healthcheck:
-      test: redis-cli ping
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   api-gateway:
     build:
       context: .
@@ -74,14 +12,10 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL:-mongodb://mongodb-users:27017/users_db}
-      REDIS_URL: redis://:${REDIS_PASSWORD:-defaultpassword}@redis:6379
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
-    depends_on:
-      mongodb-users:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      DATABASE_URL: ${MONGODB_USERS_URI}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on: []
     networks:
       - uber-network
     restart: always
@@ -106,12 +40,10 @@ services:
       - "3001:3001"
     environment:
       NODE_ENV: production
-      MONGODB_URI: ${MONGODB_USERS_URI:-mongodb://mongodb-users:27017/users_db}
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      MONGODB_URI: ${MONGODB_USERS_URI}
+      JWT_SECRET: ${JWT_SECRET}
       PORT: 3001
-    depends_on:
-      mongodb-users:
-        condition: service_healthy
+    depends_on: []
     networks:
       - uber-network
     restart: always
@@ -136,15 +68,11 @@ services:
       - "3002:3002"
     environment:
       NODE_ENV: production
-      MONGODB_URI: ${MONGODB_RIDES_URI:-mongodb://mongodb-rides:27017/rides_db}
-      REDIS_URL: redis://:${REDIS_PASSWORD:-defaultpassword}@redis:6379
+      MONGODB_URI: ${MONGODB_RIDES_URI}
+      REDIS_URL: ${REDIS_URL}
       NOTIFICATION_SERVICE_URL: http://notification-service:3003
       PORT: 3002
-    depends_on:
-      mongodb-rides:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    depends_on: []
     networks:
       - uber-network
     restart: always
@@ -169,14 +97,12 @@ services:
       - "3003:3003"
     environment:
       NODE_ENV: production
-      REDIS_URL: redis://:${REDIS_PASSWORD:-defaultpassword}@redis:6379
-      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
-      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
-      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
+      REDIS_URL: ${REDIS_URL}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       PORT: 3003
-    depends_on:
-      redis:
-        condition: service_healthy
+    depends_on: []
     networks:
       - uber-network
     restart: always
@@ -216,13 +142,7 @@ services:
         max-size: "10m"
         max-file: "3"
 
-volumes:
-  mongodb-users-data:
-    driver: local
-  mongodb-rides-data:
-    driver: local
-  redis-data:
-    driver: local
+volumes: {}
 
 networks:
   uber-network:
