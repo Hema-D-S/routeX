@@ -1,0 +1,15 @@
+node_modules/
+.env
+*.log
+npm-debug.log*
+.DS_Store
+coverage/
+dist/
+build/
+.idea/
+*.swp
+*.swo
+.vscode/
+!.vscode/settings.json
+!.vscode/launch.json
+firebase-key.json

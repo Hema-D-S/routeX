@@ -1,0 +1,143 @@
+# Docker Compose for Local Development
+version: '3.8'
+
+services:
+  mongodb-users:
+    image: mongo:5.0-alpine
+    container_name: mongodb-users-dev
+    environment:
+      MONGO_INITDB_DATABASE: users_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-users-dev:/data/db
+    networks:
+      - uber-network-dev
+
+  mongodb-rides:
+    image: mongo:5.0-alpine
+    container_name: mongodb-rides-dev
+    environment:
+      MONGO_INITDB_DATABASE: rides_db
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb-rides-dev:/data/db
+    networks:
+      - uber-network-dev
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-dev
+    command: redis-server --requirepass password
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-dev:/data
+    networks:
+      - uber-network-dev
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: api-gateway-dev
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: mongodb://mongodb-users:27017/users_db
+      REDIS_URL: redis://:password@redis:6379
+    depends_on:
+      - mongodb-users
+      - redis
+    networks:
+      - uber-network-dev
+    volumes:
+      - ./services/api-gateway:/app
+      - /app/node_modules
+
+  user-service:
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
+    container_name: user-service-dev
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://mongodb-users:27017/users_db
+      JWT_SECRET: dev-secret
+      PORT: 3001
+    depends_on:
+      - mongodb-users
+    networks:
+      - uber-network-dev
+    volumes:
+      - ./services/user-service:/app
+      - /app/node_modules
+
+  ride-service:
+    build:
+      context: .
+      dockerfile: services/ride-service/Dockerfile
+    container_name: ride-service-dev
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://mongodb-rides:27017/rides_db
+      REDIS_URL: redis://:password@redis:6379
+      NOTIFICATION_SERVICE_URL: http://notification-service:3003
+      PORT: 3002
+    depends_on:
+      - mongodb-rides
+      - redis
+    networks:
+      - uber-network-dev
+    volumes:
+      - ./services/ride-service:/app
+      - /app/node_modules
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: notification-service-dev
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: development
+      REDIS_URL: redis://:password@redis:6379
+      PORT: 3003
+    depends_on:
+      - redis
+    networks:
+      - uber-network-dev
+    volumes:
+      - ./services/notification-service:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: frontend-dev
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:3000/api
+    networks:
+      - uber-network-dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  mongodb-users-dev:
+  mongodb-rides-dev:
+  redis-dev:
+
+networks:
+  uber-network-dev:
+    driver: bridge

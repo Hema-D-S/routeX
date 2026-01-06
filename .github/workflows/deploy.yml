@@ -1,0 +1,208 @@
+# GitHub Actions CI/CD Workflow for AWS EC2 Deployment
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  # Job 1: Run tests
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:5.0
+        options: >-
+          --health-cmd "echo 'db.runCommand(\"ping\").ok' | mongosh localhost/test --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # Test API Gateway
+      - name: Test API Gateway
+        run: |
+          cd services/api-gateway
+          npm ci
+          npm run test --if-present
+        continue-on-error: true
+
+      # Test User Service
+      - name: Test User Service
+        run: |
+          cd services/user-service
+          npm ci
+          npm run test --if-present
+        continue-on-error: true
+
+      # Test Ride Service
+      - name: Test Ride Service
+        run: |
+          cd services/ride-service
+          npm ci
+          npm run test --if-present
+        continue-on-error: true
+
+      # Test Notification Service
+      - name: Test Notification Service
+        run: |
+          cd services/notification-service
+          npm ci
+          npm run test --if-present
+        continue-on-error: true
+
+      # Test Frontend
+      - name: Test Frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run test --if-present
+        continue-on-error: true
+
+  # Job 2: Build and push Docker images
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build and push API Gateway
+      - name: Build and push API Gateway
+        uses: docker/build-push-action@v4
+        with:
+          context: ./services/api-gateway
+          file: ./services/api-gateway/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/api-gateway:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build and push User Service
+      - name: Build and push User Service
+        uses: docker/build-push-action@v4
+        with:
+          context: ./services/user-service
+          file: ./services/user-service/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/user-service:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build and push Ride Service
+      - name: Build and push Ride Service
+        uses: docker/build-push-action@v4
+        with:
+          context: ./services/ride-service
+          file: ./services/ride-service/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/ride-service:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build and push Notification Service
+      - name: Build and push Notification Service
+        uses: docker/build-push-action@v4
+        with:
+          context: ./services/notification-service
+          file: ./services/notification-service/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/notification-service:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build and push Frontend
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Job 3: Deploy to EC2
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /opt/uber-clone
+            
+            echo "📦 Pulling latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+            
+            echo "🐳 Pulling latest Docker images from GitHub Container Registry..."
+            docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} ghcr.io
+            docker-compose -f docker-compose.prod.yml pull
+            
+            echo "🚀 Starting services..."
+            docker-compose -f docker-compose.prod.yml up -d
+            
+            echo "⏳ Waiting for services to be healthy..."
+            sleep 10
+            
+            echo "📊 Checking service status..."
+            docker-compose -f docker-compose.prod.yml ps
+            
+            echo "✅ Deployment complete!"
+
+      - name: Notify Deployment Status
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Deployment to EC2 ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true

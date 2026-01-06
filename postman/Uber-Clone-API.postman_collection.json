@@ -1,0 +1,673 @@
+{
+  "info": {
+    "name": "Uber Clone API",
+    "description": "Complete API collection for Uber Clone microservices",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "rideId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Checks",
+      "item": [
+        {
+          "name": "API Gateway Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        },
+        {
+          "name": "User Service Health",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3001/health"
+          }
+        },
+        {
+          "name": "Ride Service Health",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3002/health"
+          }
+        },
+        {
+          "name": "Notification Service Health",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3003/health"
+          }
+        },
+        {
+          "name": "All Services Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/health/all"
+          }
+        },
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/info"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User (Rider)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "}",
+                  "if (jsonData.user && jsonData.user._id) {",
+                  "    pm.collectionVariables.set('userId', jsonData.user._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rider@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Rider\",\n  \"phone\": \"+1234567890\",\n  \"role\": \"rider\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register User (Driver)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('driverToken', jsonData.token);",
+                  "}",
+                  "if (jsonData.user && jsonData.user._id) {",
+                  "    pm.collectionVariables.set('driverId', jsonData.user._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"driver@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"Mike\",\n  \"lastName\": \"Driver\",\n  \"phone\": \"+1987654321\",\n  \"role\": \"driver\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "}",
+                  "if (jsonData.user && jsonData.user._id) {",
+                  "    pm.collectionVariables.set('userId', jsonData.user._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rider@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/auth/refresh-token",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/users/{{userId}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/v1/users/profile",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Updated\",\n  \"phone\": \"+1111111111\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Driver Info",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/v1/users/driver/info",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"licenseNumber\": \"DL123456789\",\n  \"vehicleType\": \"car\",\n  \"vehicleNumber\": \"ABC-1234\",\n  \"vehicleModel\": \"Toyota Camry\",\n  \"isAvailable\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Driver Location",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/v1/users/driver/location",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"longitude\": 77.5946,\n  \"latitude\": 12.9716\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Nearby Drivers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/drivers/nearby?longitude=77.5946&latitude=12.9716&radius=5000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "drivers", "nearby"],
+              "query": [
+                {"key": "longitude", "value": "77.5946"},
+                {"key": "latitude", "value": "12.9716"},
+                {"key": "radius", "value": "5000"}
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Add Saved Address",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/users/addresses",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home\",\n  \"address\": \"123 Main Street, City\",\n  \"coordinates\": [77.5946, 12.9716]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rides",
+      "item": [
+        {
+          "name": "Get Fare Estimate",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rides/estimate?pickupLat=12.9716&pickupLng=77.5946&dropoffLat=12.9352&dropoffLng=77.6245",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rides", "estimate"],
+              "query": [
+                {"key": "pickupLat", "value": "12.9716"},
+                {"key": "pickupLng", "value": "77.5946"},
+                {"key": "dropoffLat", "value": "12.9352"},
+                {"key": "dropoffLng", "value": "77.6245"}
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Request Ride",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.ride && jsonData.ride._id) {",
+                  "    pm.collectionVariables.set('rideId', jsonData.ride._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/rides/request",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleType\": \"car\",\n  \"pickup\": {\n    \"address\": \"123 Pickup Street, Bangalore\",\n    \"coordinates\": [77.5946, 12.9716]\n  },\n  \"dropoff\": {\n    \"address\": \"456 Dropoff Avenue, Bangalore\",\n    \"coordinates\": [77.6245, 12.9352]\n  },\n  \"paymentMethod\": \"cash\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Accept Ride (Driver)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}/accept",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Update Ride Status - Arriving",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}/status",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"arriving\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Ride Status - In Progress",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}/status",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Ride Status - Completed",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}/status",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cancel Ride",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}/status",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"cancelled\",\n  \"cancelledBy\": \"rider\",\n  \"reason\": \"Changed my mind\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Ride by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get Active Rides",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/rides/active",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get Ride History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rides/history?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rides", "history"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"}
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Rate Ride",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}/rate",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"feedback\": \"Great ride!\",\n  \"raterType\": \"rider\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Send Notification",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/notifications/send",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"ride_requested\",\n  \"userId\": \"{{userId}}\",\n  \"channels\": [\"email\", \"push\"],\n  \"data\": {\n    \"email\": \"test@example.com\",\n    \"pickup\": \"123 Main Street\",\n    \"dropoff\": \"456 Oak Avenue\",\n    \"fare\": 150\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Send Email",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/notifications/email",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to\": \"test@example.com\",\n  \"subject\": \"Welcome to Uber Clone!\",\n  \"template\": \"welcome\",\n  \"templateData\": {\n    \"firstName\": \"John\",\n    \"appUrl\": \"http://localhost:3005\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Send SMS",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/notifications/sms",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to\": \"+1234567890\",\n  \"message\": \"Your ride is arriving in 5 minutes!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Send Push Notification",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/notifications/push",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceToken\": \"sample-device-token-12345\",\n  \"title\": \"Driver Arrived\",\n  \"body\": \"Your driver is waiting at the pickup location\",\n  \"data\": {\n    \"rideId\": \"{{rideId}}\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Queue Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/notifications/stats",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Metrics",
+      "item": [
+        {
+          "name": "Prometheus Metrics",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/metrics"
+          }
+        }
+      ]
+    }
+  ]
+}
