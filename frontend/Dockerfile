@@ -4,7 +4,7 @@ FROM node:18-alpine AS builder
 WORKDIR /build
 
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 COPY frontend/ .
 

@@ -4,7 +4,7 @@ FROM node:18-alpine AS builder
 WORKDIR /build
 
 COPY services/user-service/package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 FROM node:18-alpine
 
