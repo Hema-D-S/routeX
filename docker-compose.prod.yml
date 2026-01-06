@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   mongodb-users:
-    image: mongo:5.0-alpine
+    image: mongo:5.0
     container_name: mongodb-users
     environment:
       MONGO_INITDB_DATABASE: users_db
@@ -23,7 +23,7 @@ services:
         max-file: "3"
 
   mongodb-rides:
-    image: mongo:5.0-alpine
+    image: mongo:5.0
     container_name: mongodb-rides
     environment:
       MONGO_INITDB_DATABASE: rides_db
@@ -44,7 +44,7 @@ services:
         max-file: "3"
 
   redis:
-    image: redis:7-alpine
+    image: redis:7
     container_name: redis-cache
     command: redis-server --requirepass ${REDIS_PASSWORD:-defaultpassword}
     volumes:
