@@ -2,10 +2,7 @@ version: '3.8'
 
 services:
   api-gateway:
-    build:
-      context: .
-      dockerfile: services/api-gateway/Dockerfile
-    image: uber-api-gateway:latest
+    image: hemads/uber-api-gateway:latest
     container_name: api-gateway
     ports:
       - "3000:3000"
@@ -31,10 +28,7 @@ services:
         max-file: "3"
 
   user-service:
-    build:
-      context: .
-      dockerfile: services/user-service/Dockerfile
-    image: uber-user-service:latest
+    image: hemads/uber-user-service:latest
     container_name: user-service
     ports:
       - "3001:3001"
@@ -59,10 +53,7 @@ services:
         max-file: "3"
 
   ride-service:
-    build:
-      context: .
-      dockerfile: services/ride-service/Dockerfile
-    image: uber-ride-service:latest
+    image: hemads/uber-ride-service:latest
     container_name: ride-service
     ports:
       - "3002:3002"
@@ -88,10 +79,7 @@ services:
         max-file: "3"
 
   notification-service:
-    build:
-      context: .
-      dockerfile: services/notification-service/Dockerfile
-    image: uber-notification-service:latest
+    image: hemads/uber-notification-service:latest
     container_name: notification-service
     ports:
       - "3003:3003"
@@ -118,10 +106,7 @@ services:
         max-file: "3"
 
   frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-    image: uber-frontend:latest
+    image: hemads/uber-frontend:latest
     container_name: frontend
     ports:
       - "5173:5173"
