@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-require('dotenv').config();
+// dotenv removed - using Docker env vars
 
 const authMiddleware = require('./middleware/auth');
 const rateLimiter = require('./middleware/rateLimiter');
@@ -66,12 +66,12 @@ const serviceProxy = (target, pathPrefix) => createProxyMiddleware({
 });
 
 // Public routes (no auth required)
-app.use('/api/v1/auth', serviceProxy(process.env.USER_SERVICE_URL || 'http://localhost:3001', 'auth'));
+app.use('/api/v1/auth', serviceProxy('http://user-service:3001', 'auth'));
 
 // Protected routes (auth required)
-app.use('/api/v1/users', authMiddleware, serviceProxy(process.env.USER_SERVICE_URL || 'http://localhost:3001', 'users'));
-app.use('/api/v1/rides', authMiddleware, serviceProxy(process.env.RIDE_SERVICE_URL || 'http://localhost:3002', 'rides'));
-app.use('/api/v1/notifications', authMiddleware, serviceProxy(process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3003', 'notifications'));
+app.use('/api/v1/users', authMiddleware, serviceProxy('http://user-service:3001', 'users'));
+app.use('/api/v1/rides', authMiddleware, serviceProxy('http://ride-service:3002', 'rides'));
+app.use('/api/v1/notifications', authMiddleware, serviceProxy('http://notification-service:3003', 'notifications'));
 
 // API routes
 app.use('/api', routes);

@@ -5,7 +5,7 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 const http = require('http');
 const { Server } = require('socket.io');
-require('dotenv').config();
+// dotenv removed - using Docker env vars
 
 const rideRoutes = require('./routes/ride');
 const socketHandler = require('./socket/socketHandler');

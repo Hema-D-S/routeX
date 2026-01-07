@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
-require('dotenv').config();
+// dotenv removed - using Docker env vars
 
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
