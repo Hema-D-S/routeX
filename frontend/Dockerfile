@@ -3,12 +3,14 @@ FROM node:18-alpine AS builder
 
 WORKDIR /build
 
+ARG VITE_API_URL=http://localhost:3000/api
+
 COPY frontend/package*.json ./
 RUN npm ci --legacy-peer-deps
 
 COPY frontend/ .
 
-RUN npm run build
+RUN VITE_API_URL=${VITE_API_URL} npm run build
 
 FROM node:18-alpine
 
