@@ -21,7 +21,7 @@ app.use(express.json());
 const connectDB = async () => {
   try {
     const mongoURI =
-      process.env.MONGODB_USERS_URI || "mongodb://localhost:27017/uber-clone-users";
+      process.env.MONGODB_URI || "mongodb://localhost:27017/uber-clone-users";
     await mongoose.connect(mongoURI);
     console.log("📦 MongoDB connected successfully");
   } catch (error) {

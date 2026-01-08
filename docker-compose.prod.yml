@@ -35,7 +35,7 @@ services:
       - "3001:3001"
     environment:
       NODE_ENV: production
-      MONGODB_USERS_URI: ${MONGODB_USERS_URI}
+      MONGODB_URI: ${MONGODB_USERS_URI}
       JWT_SECRET: ${JWT_SECRET}
       PORT: 3001
     depends_on: []
@@ -60,7 +60,7 @@ services:
       - "3002:3002"
     environment:
       NODE_ENV: production
-      MONGODB_RIDES_URI: ${MONGODB_RIDES_URI}
+      MONGODB_URI: ${MONGODB_RIDES_URI}
       REDIS_URL: ${REDIS_URL}
       NOTIFICATION_SERVICE_URL: http://notification-service:3003
       PORT: 3002
