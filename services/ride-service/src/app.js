@@ -34,7 +34,7 @@ app.set("io", io);
 const connectDB = async () => {
   try {
     const mongoURI =
-      process.env.MONGODB_URI || "mongodb://localhost:27017/uber-clone-rides";
+      process.env.MONGODB_RIDES_URI || "mongodb://localhost:27017/uber-clone-rides";
     await mongoose.connect(mongoURI);
     console.log("📦 MongoDB connected successfully");
   } catch (error) {
