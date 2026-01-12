@@ -12,4 +12,4 @@ build/
 .vscode/
 !.vscode/settings.json
 !.vscode/launch.json
-firebase-key.json
+firebase-key.json".env.prod" 
